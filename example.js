@@ -1,4 +1,4 @@
-import $package_var from '$package_name';
+import pElectron from 'p-electron';
 
-console.log({$package_var});
+console.log({pElectron});
 
