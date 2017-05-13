@@ -11,15 +11,19 @@
     "main.js"
   ],
   "scripts": {
-    "test": "rollup -c && ava && xo --ignore example.js --ignore index.js"
+    "test": "rollup -c && electron test.js && xo --ignore example.js --ignore index.js"
   },
   "keywords": [],
   "tonicExampleFilename": "example.js",
   "module": "main.js",
   "devDependencies": {
-    "ava": "^0.19.1",
     "documentation": "^4.0.0-rc.1",
+    "electron": "^1.6.7",
     "rollup": "^0.41.6",
+    "tape-async": "^2.3.0",
     "xo": "^0.18.2"
+  },
+  "dependencies": {
+    "p-event": "^1.1.0"
   }
 }
