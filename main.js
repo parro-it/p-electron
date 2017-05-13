@@ -48,6 +48,7 @@ export function minimizeWindow(window) {
 				Promise.race([
 					(async () => {
 						while (!settled && !window.isMinimized()) { // eslint-disable-line no-unmodified-loop-condition
+							window.minimize();
 							await delay(200);	// eslint-disable-line no-await-in-loop
 						}
 						return true;
