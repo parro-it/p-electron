@@ -13,7 +13,16 @@ export function appReady() {
 }
 
 export function focusWindow(window) {
+	if (window.isFocused()) {
+		return Promise.resolve(true);
+	}
+
 	window.focus();
+
+	if (window.isFocused()) {
+		return Promise.resolve(true);
+	}
+
 	return pTimeout(
 		pEvent(window, 'focus').then(() => true),
 		500
@@ -24,7 +33,16 @@ export function focusWindow(window) {
 }
 
 export function minimizeWindow(window) {
+	if (window.isMinimized()) {
+		return Promise.resolve(true);
+	}
+
 	window.minimize();
+
+	if (window.isMinimized()) {
+		return Promise.resolve(true);
+	}
+
 	return pTimeout(
 		pEvent(window, 'minimize').then(() => true),
 		500
@@ -38,10 +56,17 @@ export async function restoreWindow(window) {
 	if (!window.isMinimized()) {
 		return Promise.resolve(true);
 	}
-	const restored = pEvent(window, 'restore').then(() => true);
 
 	window.restore();
-	return pTimeout(restored, 500).catch(err => {
+
+	if (!window.isMinimized()) {
+		return Promise.resolve(true);
+	}
+
+	return pTimeout(
+		pEvent(window, 'restore').then(() => true),
+		500
+	).catch(err => {
 		err.message = err.message.replace('Promise', 'Restore promise');
 		throw err;
 	});
