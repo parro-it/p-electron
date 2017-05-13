@@ -1,7 +1,8 @@
 'use strict';
 const {BrowserWindow, app} = require('electron');
 const test = require('tape-async');
-const {appReady, focusWindow, minimizeWindow} = require('.');
+const delay = require('delay');
+const {appReady, focusWindow, minimizeWindow, restoreWindow} = require('.');
 
 let win;
 
@@ -12,7 +13,7 @@ test('exports an appReady function', async t => {
 test('appReady return a promise that resolve when electron app is ready', async t => {
 	await appReady();
 	// We could create a window, because the app is ready
-	win = new BrowserWindow();
+	win = new BrowserWindow({show: false});
 	t.is(typeof win, 'object');
 });
 
@@ -29,6 +30,16 @@ test('minimizeWindow return a promise that resolve when window is minimized', as
 	t.false(browser.isMinimized());
 	t.true(await minimizeWindow(browser));
 	t.true(browser.isMinimized());
+	browser.close();
+});
+
+test('restoreWindow return a promise that resolve when window is restored', async t => {
+	const browser = new BrowserWindow();
+	t.true(await minimizeWindow(browser));
+	t.true(browser.isMinimized());
+	await delay(100);
+	t.true(await restoreWindow(browser));
+	t.false(browser.isMinimized());
 	browser.close();
 });
 
