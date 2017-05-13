@@ -1,21 +1,31 @@
 import {app} from 'electron';
 import pEvent from 'p-event';
+import pTimeout from 'p-timeout';
 
 export function appReady() {
 	if (app.isReady()) {
 		return Promise.resolve();
 	}
-	return pEvent(app, 'ready');
+	return pTimeout(
+		pEvent(app, 'ready'),
+		2000
+	);
 }
 
 export function focusWindow(window) {
 	window.focus();
-	return pEvent(window, 'focus').then(() => true);
+	return pTimeout(
+		pEvent(window, 'focus').then(() => true),
+		500
+	);
 }
 
 export function minimizeWindow(window) {
 	window.minimize();
-	return pEvent(window, 'minimize').then(() => true);
+	return pTimeout(
+		pEvent(window, 'minimize').then(() => true),
+		500
+	);
 }
 
 export async function restoreWindow(window) {
@@ -26,5 +36,5 @@ export async function restoreWindow(window) {
 	window.on('restore', () => console.error('restore called'));
 
 	window.restore();
-	return restored;
+	return pTimeout(restored, 500);
 }
