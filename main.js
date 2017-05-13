@@ -17,7 +17,10 @@ export function focusWindow(window) {
 	return pTimeout(
 		pEvent(window, 'focus').then(() => true),
 		500
-	);
+	).catch(err => {
+		err.message = err.message.replace('Promise', 'Focus promise');
+		throw err;
+	});
 }
 
 export function minimizeWindow(window) {
@@ -25,7 +28,10 @@ export function minimizeWindow(window) {
 	return pTimeout(
 		pEvent(window, 'minimize').then(() => true),
 		500
-	);
+	).catch(err => {
+		err.message = err.message.replace('Promise', 'Minimize promise');
+		throw err;
+	});
 }
 
 export async function restoreWindow(window) {
@@ -33,8 +39,10 @@ export async function restoreWindow(window) {
 		return Promise.resolve(true);
 	}
 	const restored = pEvent(window, 'restore').then(() => true);
-	window.on('restore', () => console.error('restore called'));
 
 	window.restore();
-	return pTimeout(restored, 500);
+	return pTimeout(restored, 500).catch(err => {
+		err.message = err.message.replace('Promise', 'Restore promise');
+		throw err;
+	});
 }
