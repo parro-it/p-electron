@@ -39,17 +39,19 @@ export function minimizeWindow(window) {
 
 	window.minimize();
 
-	if (window.isMinimized()) {
-		return Promise.resolve(true);
-	}
+	return Promise.resolve().then(() =>
+		(window.isMinimized()) ?
 
-	return pTimeout(
-		pEvent(window, 'minimize').then(() => true),
-		500
-	).catch(err => {
-		err.message = err.message.replace('Promise', 'Minimize promise');
-		throw err;
-	});
+			Promise.resolve(true) :
+
+			pTimeout(
+				pEvent(window, 'minimize').then(() => true),
+				500
+			).catch(err => {
+				err.message = err.message.replace('Promise', 'Minimize promise');
+				throw err;
+			})
+	);
 }
 
 export async function restoreWindow(window) {
