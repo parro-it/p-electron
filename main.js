@@ -1,6 +1,7 @@
 import {app} from 'electron';
 import pEvent from 'p-event';
 import pTimeout from 'p-timeout';
+import delay from 'delay';
 
 export function appReady() {
 	if (app.isReady()) {
@@ -36,16 +37,26 @@ export function minimizeWindow(window) {
 	if (window.isMinimized()) {
 		return Promise.resolve(true);
 	}
-
 	window.minimize();
-
+	let settled;
 	return Promise.resolve().then(() =>
-		(window.isMinimized()) ?
+		window.isMinimized() ?
 
 			Promise.resolve(true) :
 
 			pTimeout(
-				pEvent(window, 'minimize').then(() => true),
+				Promise.race([
+					(async () => {
+						while (!settled && !window.isMinimized()) { // eslint-disable-line no-unmodified-loop-condition
+							await delay(200);	// eslint-disable-line no-await-in-loop
+						}
+						return true;
+					})(),
+					pEvent(window, 'minimize').then(() => {
+						settled = true;
+						return true;
+					})
+				]),
 				5000
 			).catch(err => {
 				err.message = err.message.replace('Promise', 'Minimize promise');
