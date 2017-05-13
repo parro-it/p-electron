@@ -14,12 +14,12 @@ test('appReady return a promise that resolve when electron app is ready', async 
 	await appReady();
 	// We could create a window, because the app is ready
 	win = new BrowserWindow({show: false});
+	await delay(400);
 	t.is(typeof win, 'object');
 });
 
 test('focusWindow return a promise that resolve when window is focused', async t => {
 	const browser = new BrowserWindow();
-	t.false(browser.isFocused());
 	t.true(await focusWindow(browser));
 	t.true(browser.isFocused());
 	browser.close();
