@@ -46,7 +46,7 @@ export function minimizeWindow(window) {
 
 			pTimeout(
 				pEvent(window, 'minimize').then(() => true),
-				500
+				5000
 			).catch(err => {
 				err.message = err.message.replace('Promise', 'Minimize promise');
 				throw err;
