@@ -2,7 +2,13 @@
 const {BrowserWindow, app} = require('electron');
 const test = require('tape-async');
 const delay = require('delay');
-const {appReady, focusWindow, minimizeWindow, restoreWindow} = require('.');
+const {
+	appReady,
+	focusWindow,
+	minimizeWindow,
+	restoreWindow,
+	windowVisible
+} = require('.');
 
 let win;
 
@@ -20,6 +26,7 @@ test('appReady return a promise that resolve when electron app is ready', async 
 
 test('focusWindow return a promise that resolve when window is focused', async t => {
 	const browser = new BrowserWindow();
+	await windowVisible(browser);
 	t.true(await focusWindow(browser));
 	t.true(browser.isFocused());
 	browser.close();
@@ -27,6 +34,7 @@ test('focusWindow return a promise that resolve when window is focused', async t
 
 test('minimizeWindow return a promise that resolve when window is minimized', async t => {
 	const browser = new BrowserWindow();
+	await windowVisible(browser);
 	t.false(browser.isMinimized());
 	t.true(await minimizeWindow(browser));
 	t.true(browser.isMinimized());
@@ -35,10 +43,11 @@ test('minimizeWindow return a promise that resolve when window is minimized', as
 
 test('restoreWindow return a promise that resolve when window is restored', async t => {
 	const browser = new BrowserWindow();
+	await windowVisible(browser);
 	t.true(await minimizeWindow(browser));
 	t.true(browser.isMinimized());
-	await delay(100);
 	t.true(await restoreWindow(browser));
+	await delay(100);
 	t.false(browser.isMinimized());
 	browser.close();
 });

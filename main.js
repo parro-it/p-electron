@@ -11,11 +11,33 @@ export function appReady() {
 		2000
 	);
 }
+
+function resolveWithTimeout(resolver, promiseName) {
+	return pTimeout(
+		new Promise(resolver),
+		500
+	).catch(err => {
+		err.message = err.message.replace('Promise', promiseName);
+		throw err;
+	});
+}
+
+export const windowVisible = win => {
+	if (win.isVisible()) {
+		// To debug -- console.log('windowVisible: isVisible === true');
+		return Promise.resolve(true);
+	}
+	return resolveWithTimeout(resolve => {
+		// To debug -- console.log('resolveWithTimeout on show event');
+		win.on('show', resolve);
+	}, 'windowVisible promise');
+};
+
 export function focusWindow(win) {
 	return pTimeout(
 		new Promise(resolve => {
-			if (win.isFocused()) {
-				return resolve();
+			if (win.isFocused() || !win.isVisible()) {
+				return resolve(true);
 			}
 			win.on('focus', resolve);
 			win.focus();
@@ -38,12 +60,15 @@ export function focusWindow(win) {
 export function minimizeWindow(win) {
 	return pTimeout(
 		new Promise(resolve => {
-			if (win.isMinimized()) {
-				return resolve();
+			// To debug -- console.log('----- start of resolver ----------', win.isVisible())
+			if (win.isMinimized() || !win.isVisible()) {
+				return resolve(true);
 			}
 
 			win.on('minimize', resolve);
+			// To debug -- console.log('----- before minimize ----------', win.isVisible())
 			win.minimize();
+			// To debug -- console.log('----- after minimize ----------', win.isVisible())
 		}),
 		500
 	).catch(err => {
@@ -52,17 +77,19 @@ export function minimizeWindow(win) {
 	});
 }
 
-export async function restoreWindow(win) {
+export function restoreWindow(win) {
+	// To debug -- console.error('*************** restoreWindow')
 	return pTimeout(
 		new Promise(resolve => {
+			// To debug -- console.error('*************** -->', win.isMinimized(), win.isVisible())
 			if (!win.isMinimized()) {
-				return resolve();
+				return resolve(true);
 			}
 
 			win.on('restore', resolve);
-			win.restore();
+			setTimeout(() => win.restore());
 		}),
-		500
+		2000
 	).catch(err => {
 		err.message = err.message.replace('Promise', 'Restore promise');
 		throw err;
