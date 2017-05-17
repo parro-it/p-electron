@@ -1,7 +1,6 @@
 import {app} from 'electron';
 import pEvent from 'p-event';
 import pTimeout from 'p-timeout';
-import delay from 'delay';
 
 export function appReady() {
 	if (app.isReady()) {
@@ -12,20 +11,23 @@ export function appReady() {
 		2000
 	);
 }
-
-export function focusWindow(window) {
-	if (window.isFocused()) {
-		return Promise.resolve(true);
-	}
-
-	window.focus();
-
-	if (window.isFocused()) {
-		return Promise.resolve(true);
-	}
-
+export function focusWindow(win) {
 	return pTimeout(
-		pEvent(window, 'focus').then(() => true),
+		new Promise(resolve => {
+			if (win.isFocused()) {
+				return resolve();
+			}
+			win.on('focus', resolve);
+			win.focus();
+		}).then(() => new Promise(resolve => {
+			function check() {
+				if (win.isFocused()) {
+					return resolve(true);
+				}
+				setTimeout(check);
+			}
+			check();
+		})),
 		500
 	).catch(err => {
 		err.message = err.message.replace('Promise', 'Focus promise');
@@ -33,52 +35,33 @@ export function focusWindow(window) {
 	});
 }
 
-export function minimizeWindow(window) {
-	if (window.isMinimized()) {
-		return Promise.resolve(true);
-	}
-	window.minimize();
-	let settled;
-	return Promise.resolve().then(() =>
-		window.isMinimized() ?
+export function minimizeWindow(win) {
+	return pTimeout(
+		new Promise(resolve => {
+			if (win.isMinimized()) {
+				return resolve();
+			}
 
-			Promise.resolve(true) :
-
-			pTimeout(
-				Promise.race([
-					(async () => {
-						while (!settled && !window.isMinimized()) { // eslint-disable-line no-unmodified-loop-condition
-							window.minimize();
-							await delay(200);	// eslint-disable-line no-await-in-loop
-						}
-						return true;
-					})(),
-					pEvent(window, 'minimize').then(() => {
-						settled = true;
-						return true;
-					})
-				]),
-				5000
-			).catch(err => {
-				err.message = err.message.replace('Promise', 'Minimize promise');
-				throw err;
-			})
-	);
+			win.on('minimize', resolve);
+			win.minimize();
+		}),
+		500
+	).catch(err => {
+		err.message = err.message.replace('Promise', 'Minimize promise');
+		throw err;
+	});
 }
 
-export async function restoreWindow(window) {
-	if (!window.isMinimized()) {
-		return Promise.resolve(true);
-	}
-
-	window.restore();
-
-	if (!window.isMinimized()) {
-		return Promise.resolve(true);
-	}
-
+export async function restoreWindow(win) {
 	return pTimeout(
-		pEvent(window, 'restore').then(() => true),
+		new Promise(resolve => {
+			if (!win.isMinimized()) {
+				return resolve();
+			}
+
+			win.on('restore', resolve);
+			win.restore();
+		}),
 		500
 	).catch(err => {
 		err.message = err.message.replace('Promise', 'Restore promise');
