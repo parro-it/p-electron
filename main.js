@@ -2,6 +2,7 @@ import {app} from 'electron';
 import pEvent from 'p-event';
 import pTimeout from 'p-timeout';
 import {default as _debug} from 'debug';
+import delay from 'delay';
 
 const debug = _debug('p-electron');
 
@@ -36,14 +37,28 @@ export const windowVisible = win => {
 	}, 'windowVisible promise')(win);
 };
 
-export const focusWindow = resolveWithTimeout((win, resolve) => {
+export const focusWindow = resolveWithTimeout(async (win, resolvePromise) => {
+	let resolved = false;
+	const resolve = value => {
+		if (resolved) {
+			return;
+		}
+		resolvePromise(value);
+		resolved = true;
+	};
+
 	if (win.isFocused() || !win.isVisible()) {
 		return resolve(true);
 	}
 	win.on('focus', resolve);
 	win.focus();
 
+	await delay(100);
+
 	function check() {
+		if (win.isDestroyed()) {
+			return resolve(false);
+		}
 		if (win.isFocused()) {
 			return resolve(true);
 		}
@@ -53,7 +68,16 @@ export const focusWindow = resolveWithTimeout((win, resolve) => {
 	check();
 }, 'Focus promise');
 
-export const minimizeWindow = resolveWithTimeout((win, resolve) => {
+export const minimizeWindow = resolveWithTimeout(async (win, resolvePromise) => {
+	let resolved = false;
+	const resolve = value => {
+		if (resolved) {
+			return;
+		}
+		resolvePromise(value);
+		resolved = true;
+	};
+
 	debug('----- start of resolver ----------', win.isVisible());
 	if (win.isMinimized() || !win.isVisible()) {
 		return resolve(true);
@@ -63,6 +87,21 @@ export const minimizeWindow = resolveWithTimeout((win, resolve) => {
 	debug('----- before minimize ----------', win.isVisible());
 	win.minimize();
 	debug('----- after minimize ----------', win.isVisible());
+
+	await delay(100);
+
+	function check() {
+		if (win.isDestroyed()) {
+			return resolve(false);
+		}
+		if (win.isMinimized()) {
+			return resolve(true);
+		}
+		setTimeout(check);
+	}
+
+	debug('----- start polling ----------', win.isVisible());
+	check();
 }, 'Minimize promise');
 
 export const restoreWindow = resolveWithTimeout((win, resolve) => {
