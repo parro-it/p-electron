@@ -15,7 +15,7 @@ export function appReady() {
 function resolveWithTimeout(resolver, promiseName) {
 	return pTimeout(
 		new Promise(resolver),
-		500
+		2000
 	).catch(err => {
 		err.message = err.message.replace('Promise', promiseName);
 		throw err;
@@ -34,26 +34,21 @@ export const windowVisible = win => {
 };
 
 export function focusWindow(win) {
-	return pTimeout(
-		new Promise(resolve => {
-			if (win.isFocused() || !win.isVisible()) {
+	return resolveWithTimeout(resolve => {
+		if (win.isFocused() || !win.isVisible()) {
+			return resolve(true);
+		}
+		win.on('focus', resolve);
+		win.focus();
+
+		function check() {
+			if (win.isFocused()) {
 				return resolve(true);
 			}
-			win.on('focus', resolve);
-			win.focus();
-		}).then(() => new Promise(resolve => {
-			function check() {
-				if (win.isFocused()) {
-					return resolve(true);
-				}
-				setTimeout(check);
-			}
-			check();
-		})),
-		500
-	).catch(err => {
-		err.message = err.message.replace('Promise', 'Focus promise');
-		throw err;
+			setTimeout(check);
+		}
+
+		check();
 	});
 }
 
