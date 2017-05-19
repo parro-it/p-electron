@@ -100,11 +100,20 @@ export const minimizeWindow = resolveWithTimeout(async (win, resolvePromise) => 
 		setTimeout(check);
 	}
 
-	debug('----- start polling ----------', win.isVisible());
+	debug('----- start polling ----------');
 	check();
 }, 'Minimize promise');
 
-export const restoreWindow = resolveWithTimeout((win, resolve) => {
+export const restoreWindow = resolveWithTimeout(async (win, resolvePromise) => {
+	let resolved = false;
+	const resolve = value => {
+		if (resolved) {
+			return;
+		}
+		resolvePromise(value);
+		resolved = true;
+	};
+
 	debug('*************** -->', win.isMinimized(), win.isVisible());
 	if (!win.isMinimized()) {
 		return resolve(true);
@@ -112,4 +121,19 @@ export const restoreWindow = resolveWithTimeout((win, resolve) => {
 
 	win.on('restore', resolve);
 	setTimeout(() => win.restore());
+
+	await delay(100);
+
+	function check() {
+		if (win.isDestroyed()) {
+			return resolve(false);
+		}
+		if (!win.isMinimized()) {
+			return resolve(true);
+		}
+		setTimeout(check);
+	}
+
+	debug('----- start polling ----------');
+	check();
 }, 'Restore promise');
