@@ -49,44 +49,32 @@ export function focusWindow(win) {
 		}
 
 		check();
-	});
+	}, 'Focus promise');
 }
 
 export function minimizeWindow(win) {
-	return pTimeout(
-		new Promise(resolve => {
-			// To debug -- console.log('----- start of resolver ----------', win.isVisible())
-			if (win.isMinimized() || !win.isVisible()) {
-				return resolve(true);
-			}
+	return resolveWithTimeout(resolve => {
+		// To debug -- console.log('----- start of resolver ----------', win.isVisible())
+		if (win.isMinimized() || !win.isVisible()) {
+			return resolve(true);
+		}
 
-			win.on('minimize', resolve);
-			// To debug -- console.log('----- before minimize ----------', win.isVisible())
-			win.minimize();
-			// To debug -- console.log('----- after minimize ----------', win.isVisible())
-		}),
-		500
-	).catch(err => {
-		err.message = err.message.replace('Promise', 'Minimize promise');
-		throw err;
-	});
+		win.on('minimize', resolve);
+		// To debug -- console.log('----- before minimize ----------', win.isVisible())
+		win.minimize();
+		// To debug -- console.log('----- after minimize ----------', win.isVisible())
+	}, 'Minimize promise');
 }
 
 export function restoreWindow(win) {
 	// To debug -- console.error('*************** restoreWindow')
-	return pTimeout(
-		new Promise(resolve => {
-			// To debug -- console.error('*************** -->', win.isMinimized(), win.isVisible())
-			if (!win.isMinimized()) {
-				return resolve(true);
-			}
+	return resolveWithTimeout(resolve => {
+		// To debug -- console.error('*************** -->', win.isMinimized(), win.isVisible())
+		if (!win.isMinimized()) {
+			return resolve(true);
+		}
 
-			win.on('restore', resolve);
-			setTimeout(() => win.restore());
-		}),
-		2000
-	).catch(err => {
-		err.message = err.message.replace('Promise', 'Restore promise');
-		throw err;
-	});
+		win.on('restore', resolve);
+		setTimeout(() => win.restore());
+	}, 'Restore promise');
 }
