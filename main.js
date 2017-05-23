@@ -42,21 +42,12 @@ export const focusWindow = resolveWithTimeout(async (win, resolve) => {
 		return resolve(true);
 	}
 
-	win.on('focus', () => {
-		check();
+	win.on('focus', async () => {
+		await delay(100);
+		resolve(true);
 	});
 
 	win.focus();
-
-	function check() {
-		if (win.isDestroyed()) {
-			return resolve(false);
-		}
-		if (win.isFocused()) {
-			return resolve(true);
-		}
-		setTimeout(check);
-	}
 }, 'Focus promise');
 
 export const minimizeWindow = resolveWithTimeout(async (win, resolve) => {
@@ -65,41 +56,19 @@ export const minimizeWindow = resolveWithTimeout(async (win, resolve) => {
 	}
 
 	win.on('minimize', () => {
-		return resolve(true);
+		resolve(true);
 	});
+
 	win.minimize();
 }, 'Minimize promise');
 
-export const restoreWindow = resolveWithTimeout(async (win, resolvePromise) => {
-	let resolved = false;
-	const resolve = value => {
-		if (resolved) {
-			return;
-		}
-		resolvePromise(value);
-		resolved = true;
-	};
-
-	debug('*************** -->', win.isMinimized(), win.isVisible());
+export const restoreWindow = resolveWithTimeout(async (win, resolve) => {
 	if (!win.isMinimized()) {
 		return resolve(true);
 	}
 
-	win.on('restore', resolve);
-	setTimeout(() => win.restore());
-
-	await delay(100);
-
-	function check() {
-		if (win.isDestroyed()) {
-			return resolve(false);
-		}
-		if (!win.isMinimized()) {
-			return resolve(true);
-		}
-		setTimeout(check);
-	}
-
-	debug('----- start polling ----------');
-	check();
+	win.on('restore', () => {
+		resolve(true);
+	});
+	win.restore();
 }, 'Restore promise');

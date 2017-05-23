@@ -26,10 +26,11 @@ test('appReady return a promise that resolve when electron app is ready', async 
 
 test('focusWindow return a promise that resolve when window is focused', async t => {
 	const browser = new BrowserWindow();
-	browser.loadURL(`file://${__dirname}/index.html`);
+	// browser.loadURL(`file://${__dirname}/index.html`);
 	await windowVisible(browser);
 	t.true(await focusWindow(browser));
 	t.true(browser.isFocused());
+
 	browser.close();
 });
 
