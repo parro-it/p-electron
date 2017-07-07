@@ -37,6 +37,18 @@ export const windowVisible = win => {
 	}, 'windowVisible promise')(win);
 };
 
+export const windowClosed = win => {
+	if (win.isDestroyed()) {
+		debug('windowClosed: isDestroyed === true');
+		return Promise.resolve(true);
+	}
+
+	return resolveWithTimeout((win, resolve) => {
+		debug('resolveWithTimeout on closed event');
+		win.on('closed', resolve);
+	}, 'windowClosed promise')(win);
+};
+
 export const focusWindow = resolveWithTimeout(async (win, resolvePromise) => {
 	let resolved = false;
 	const resolve = value => {
