@@ -19,7 +19,7 @@ export function appReady() {
 const resolveWithTimeout = (resolver, promiseName) => win =>
 	pTimeout(
 		new Promise(resolve => resolver(win, resolve)),
-		2000
+		2000000
 	).catch(err => {
 		err.message = err.message.replace('Promise', promiseName);
 		throw err;
@@ -62,90 +62,34 @@ export const focusWindow = resolveWithTimeout(async (win, resolvePromise) => {
 	if (win.isFocused() || !win.isVisible()) {
 		return resolve(true);
 	}
-	win.on('focus', resolve);
+
+	win.on('focus', async () => {
+		await delay(100);
+		resolve(true);
+	});
+
 	win.focus();
-
-	await delay(100);
-
-	function check() {
-		if (win.isDestroyed()) {
-			return resolve(false);
-		}
-		if (win.isFocused()) {
-			return resolve(true);
-		}
-		setTimeout(check);
-	}
-
-	check();
 }, 'Focus promise');
 
-export const minimizeWindow = resolveWithTimeout(async (win, resolvePromise) => {
-	let resolved = false;
-	const resolve = value => {
-		if (resolved) {
-			return;
-		}
-		resolvePromise(value);
-		resolved = true;
-	};
-
-	debug('----- start of resolver ----------', win.isVisible());
-	if (win.isMinimized() || !win.isVisible()) {
+export const minimizeWindow = resolveWithTimeout(async (win, resolve) => {
+	if (win.isMinimized()) {
 		return resolve(true);
 	}
 
-	win.on('minimize', resolve);
-	debug('----- before minimize ----------', win.isVisible());
+	win.on('minimize', () => {
+		resolve(true);
+	});
+
 	win.minimize();
-	debug('----- after minimize ----------', win.isVisible());
-
-	await delay(100);
-
-	function check() {
-		if (win.isDestroyed()) {
-			return resolve(false);
-		}
-		if (win.isMinimized()) {
-			return resolve(true);
-		}
-		setTimeout(check);
-	}
-
-	debug('----- start polling ----------');
-	check();
 }, 'Minimize promise');
 
-export const restoreWindow = resolveWithTimeout(async (win, resolvePromise) => {
-	let resolved = false;
-	const resolve = value => {
-		if (resolved) {
-			return;
-		}
-		resolvePromise(value);
-		resolved = true;
-	};
-
-	debug('*************** -->', win.isMinimized(), win.isVisible());
+export const restoreWindow = resolveWithTimeout(async (win, resolve) => {
 	if (!win.isMinimized()) {
 		return resolve(true);
 	}
 
-	win.on('restore', resolve);
-	setTimeout(() => win.restore());
-
-	await delay(100);
-
-	function check() {
-		if (win.isDestroyed()) {
-			return resolve(false);
-		}
-		if (!win.isMinimized()) {
-			return resolve(true);
-		}
-		setTimeout(check);
-	}
-
-	debug('----- start polling ----------');
-	check();
+	win.on('restore', () => {
+		resolve(true);
+	});
+	win.restore();
 }, 'Restore promise');
